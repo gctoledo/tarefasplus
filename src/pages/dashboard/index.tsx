@@ -2,6 +2,8 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 import { GetServerSideProps } from "next";
 
+import Link from "next/link";
+
 import Head from "next/head";
 
 import { getSession } from "next-auth/react";
@@ -20,6 +22,8 @@ import {
   orderBy,
   where,
   onSnapshot,
+  deleteDoc,
+  doc,
 } from "firebase/firestore";
 import { db } from "@/services/firebaseConnection";
 
@@ -95,6 +99,19 @@ const Dashboard = ({ user }: DashboardProps) => {
     loadTasks();
   }, [user?.email]);
 
+  const handleDeleteTask = async (id: string) => {
+    const taskRef = doc(db, "tasks", id);
+
+    await deleteDoc(taskRef);
+  };
+
+  const handleShare = async (id: string) => {
+    await navigator.clipboard.writeText(
+      `${process.env.NEXT_PUBLIC_URL}/task/${id}`
+    );
+    console.log("URL COPIADA COM SUCESSO");
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -138,14 +155,27 @@ const Dashboard = ({ user }: DashboardProps) => {
               {task.public && (
                 <div className={styles.tagContainer}>
                   <label className={styles.tag}>PÚBLICA</label>
-                  <button className={styles.shareButton}>
+                  <button
+                    className={styles.shareButton}
+                    onClick={() => handleShare(task.id)}
+                  >
                     <FiShare2 color="#3183ff" size={22} />
                   </button>
                 </div>
               )}
               <div className={styles.taskContent}>
-                <p>{task.task}</p>
-                <button className={styles.trashButton}>
+                {task.public ? (
+                  <Link href={`/task/${task.id}`}>
+                    <p>{task.task}</p>
+                  </Link>
+                ) : (
+                  <p>{task.task}</p>
+                )}
+
+                <button
+                  className={styles.trashButton}
+                  onClick={() => handleDeleteTask(task.id)}
+                >
                   <FaTrash color="#ea3140" size={24} />
                 </button>
               </div>
