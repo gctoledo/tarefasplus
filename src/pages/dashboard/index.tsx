@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 import { GetServerSideProps } from "next";
 
@@ -13,7 +13,14 @@ import TextArea from "@/components/textarea";
 import { FiShare2 } from "react-icons/fi";
 import { FaTrash } from "react-icons/fa";
 
-import { addDoc, collection } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  query,
+  orderBy,
+  where,
+  onSnapshot,
+} from "firebase/firestore";
 import { db } from "@/services/firebaseConnection";
 
 interface DashboardProps {
@@ -22,9 +29,18 @@ interface DashboardProps {
   };
 }
 
+interface TaskProps {
+  id: string;
+  created: Date;
+  public: boolean;
+  task: string;
+  user: string;
+}
+
 const Dashboard = ({ user }: DashboardProps) => {
   const [input, setInput] = useState("");
   const [publicTask, setPublicTask] = useState(false);
+  const [tasks, setTasks] = useState<TaskProps[]>([]);
 
   const handleChangePublic = (e: ChangeEvent<HTMLInputElement>) => {
     setPublicTask(e.target.checked);
@@ -49,6 +65,35 @@ const Dashboard = ({ user }: DashboardProps) => {
       console.log(err);
     }
   };
+
+  useEffect(() => {
+    async function loadTasks() {
+      const tasksRef = collection(db, "tasks");
+      const q = query(
+        tasksRef,
+        orderBy("created", "desc"),
+        where("user", "==", user?.email)
+      );
+
+      onSnapshot(q, (snapshot) => {
+        let list = [] as TaskProps[];
+
+        snapshot.forEach((doc) => {
+          list.push({
+            id: doc.id,
+            created: doc.data().created,
+            public: doc.data().public,
+            task: doc.data().task,
+            user: doc.data().user,
+          });
+        });
+
+        setTasks(list);
+      });
+    }
+
+    loadTasks();
+  }, [user?.email]);
 
   return (
     <div className={styles.container}>
@@ -88,21 +133,24 @@ const Dashboard = ({ user }: DashboardProps) => {
         <section className={styles.taskContainer}>
           <h1>Minhas tarefas</h1>
 
-          <article className={styles.task}>
-            <div className={styles.tagContainer}>
-              <label className={styles.tag}>PÚBLICA</label>
-              <button className={styles.shareButton}>
-                <FiShare2 color="#3183ff" size={22} />
-              </button>
-            </div>
-
-            <div className={styles.taskContent}>
-              <p>Minha primeira tarefa!</p>
-              <button className={styles.trashButton}>
-                <FaTrash color="#ea3140" size={24} />
-              </button>
-            </div>
-          </article>
+          {tasks.map((task) => (
+            <article className={styles.task} key={task.id}>
+              {task.public && (
+                <div className={styles.tagContainer}>
+                  <label className={styles.tag}>PÚBLICA</label>
+                  <button className={styles.shareButton}>
+                    <FiShare2 color="#3183ff" size={22} />
+                  </button>
+                </div>
+              )}
+              <div className={styles.taskContent}>
+                <p>{task.task}</p>
+                <button className={styles.trashButton}>
+                  <FaTrash color="#ea3140" size={24} />
+                </button>
+              </div>
+            </article>
+          ))}
         </section>
       </main>
     </div>
