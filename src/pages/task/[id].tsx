@@ -15,10 +15,14 @@ import {
   where,
   getDoc,
   addDoc,
+  getDocs,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "@/services/firebaseConnection";
 
 import TextArea from "@/components/textarea";
+
+import { FaTrash } from "react-icons/fa";
 
 interface TaskProps {
   task: {
@@ -28,12 +32,22 @@ interface TaskProps {
     task: string;
     user: string;
   };
+  allComments: CommentsProps[];
 }
 
-const Task = ({ task }: TaskProps) => {
+interface CommentsProps {
+  id: string;
+  comment: string;
+  taskId: string;
+  user: string;
+  name: string;
+}
+
+const Task = ({ task, allComments }: TaskProps) => {
   const { data: session } = useSession();
 
   const [input, setInput] = useState("");
+  const [comments, setComments] = useState<CommentsProps[]>(allComments || []);
 
   const handleComment = async (e: FormEvent) => {
     e.preventDefault();
@@ -48,10 +62,32 @@ const Task = ({ task }: TaskProps) => {
         created: new Date(),
         user: session?.user?.email,
         name: session?.user?.name,
-        taskId: task.id,
+        taskId: task?.id,
       });
 
+      const data = {
+        id: docRef.id,
+        comment: input,
+        user: session?.user?.email,
+        name: session?.user?.name,
+        taskId: task?.id,
+      };
+
+      setComments((oldItems) => [...oldItems, data]);
       setInput("");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleDeleteComment = async (id: string) => {
+    try {
+      const docRef = doc(db, "comments", id);
+      await deleteDoc(docRef);
+
+      const deleteComment = comments.filter((comment) => comment.id !== id);
+
+      setComments(deleteComment);
     } catch (err) {
       console.log(err);
     }
@@ -86,6 +122,30 @@ const Task = ({ task }: TaskProps) => {
           </button>
         </form>
       </section>
+
+      <section className={styles.commentsContainer}>
+        <h2>Todos os comentários</h2>
+        {comments.length === 0 && <span>Nenhum comentário encontrado</span>}
+
+        {comments.map((comment) => (
+          <article className={styles.comment} key={comment.id}>
+            <div className={styles.headComment}>
+              <label className={styles.commentLabel}>{comment.name}</label>
+
+              {comment.user === session?.user?.email && (
+                <button
+                  className={styles.buttonTrash}
+                  onClick={() => handleDeleteComment(comment.id)}
+                >
+                  <FaTrash color="#ea3140" size={18} />
+                </button>
+              )}
+            </div>
+
+            <p>{comment.comment}</p>
+          </article>
+        ))}
+      </section>
     </div>
   );
 };
@@ -96,10 +156,24 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const id = params?.id as string;
 
   const docRef = doc(db, "tasks", id);
+  const snapshotTask = await getDoc(docRef);
 
-  const snapshot = await getDoc(docRef);
+  const q = query(collection(db, "comments"), where("taskId", "==", id));
+  const snapshotComments = await getDocs(q);
 
-  if (snapshot.data() === undefined) {
+  const allComments = [] as CommentsProps[];
+
+  snapshotComments.forEach((doc) => {
+    allComments.push({
+      id: doc.id,
+      comment: doc.data().comment,
+      user: doc.data().user,
+      name: doc.data().name,
+      taskId: doc.data().taskId,
+    });
+  });
+
+  if (snapshotTask.data() === undefined) {
     return {
       redirect: {
         destination: "/",
@@ -108,7 +182,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     };
   }
 
-  if (!snapshot.data()?.public) {
+  if (!snapshotTask.data()?.public) {
     return {
       redirect: {
         destination: "/",
@@ -117,19 +191,20 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     };
   }
 
-  const miliseconds = snapshot.data()?.created?.seconds * 1000;
+  const miliseconds = snapshotTask.data()?.created?.seconds * 1000;
 
   const task = {
-    task: snapshot.data()?.task,
-    public: snapshot.data()?.public,
+    task: snapshotTask.data()?.task,
+    public: snapshotTask.data()?.public,
     created: new Date(miliseconds).toLocaleDateString(),
-    user: snapshot.data()?.user,
+    user: snapshotTask.data()?.user,
     id: id,
   };
 
   return {
     props: {
       task,
+      allComments,
     },
   };
 };
