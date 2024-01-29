@@ -1,40 +1,41 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Tarefas+
 
-## Getting Started
+Projeto de organizador de tarefas criado com NextJS, utilizando a autenticação com o Google para o sistema de login, que é gerenciado pelo Next Auth e armazenado no Firebase. A aplicação possui sistema de cadastro, edição e remoção tarefas, podendo deixa-las privadas ou públicas. Também possui sistema de comentários para as tarefas públicas.
 
-First, run the development server:
+## 🔥 Introdução
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+O projeto consiste em um site utilizado para organização de tarefas. Após efetuar o login utilizando sua conta Google, o usuário recebe a permissão para acessar o Dashboard, que possui rota protegida, e com isso pode cadastrar, editar ou deletar suas tarefas, podendo torna-las privadas ou públicas, que serão armazenadas no banco de dados do Firebase (Firestore). O sistema de rotas foi criado utilizando o próprio sistema do NextJS, contando com rotas protegidas para o Dashboard, permitindo apenas usuários logados a acessarem suas configurações. O gerenciamento de autenticação fica responsável pelo próprio NextAuth.
+
+### 🔨 Guia de instalação
+
+Para visualizar o projeto é necessário possuir o NodeJS instalado em sua máquina. Você pode fazer um clone do repositório e executar os seguintes comandos no terminal para visualizar o projeto:
+
+Clone o projeto
+
+```
+  git clone https://github.com/gctoledo/tarefasplus
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Entre no diretório do projeto
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+```
+  cd my-project
+```
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+Instale as dependências
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+```
+  npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Inicie o servidor
 
-## Learn More
+```
+  npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 📦 Tecnologias usadas:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+- ![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
+- ![Firebase](https://img.shields.io/badge/firebase-%23039BE5.svg?style=for-the-badge&logo=firebase)
